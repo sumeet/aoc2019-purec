@@ -13,7 +13,12 @@ day3: day3.c
 	gcc -g -o build/day3 day3.c
 	./build/day3
 
-current: day3
+day4: day4.c
+	mkdir -p build
+	gcc -g -o build/day4 day4.c
+	./build/day4
+
+current: day4
 
 clean:
 	rm -rf build/*
