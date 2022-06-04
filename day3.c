@@ -8,6 +8,7 @@
 typedef struct Point {
     int x;
     int y;
+    int steps_taken;
 } Point;
 
 bool between(float num, float x, float y) {
@@ -19,7 +20,11 @@ bool between(float num, float x, float y) {
         return x == y == num;
     }
 }
-//
+
+int manhattan_distance(Point a, Point b) {
+    return abs(a.x - b.x) + abs(a.y - b.y);
+}
+
 bool intersects(Point self0, Point self1, Point other0, Point other1, Point *intersection_out) {
     float x0 = (float) self0.x;
     float y0 = (float) self0.y;
@@ -36,6 +41,7 @@ bool intersects(Point self0, Point self1, Point other0, Point other1, Point *int
         (between(y_cross, y0, y1) || between(y_cross, y2, y3))) {
         intersection_out->x = (int) x_cross;
         intersection_out->y = (int) y_cross;
+        intersection_out->steps_taken = self0.steps_taken + other0.steps_taken + manhattan_distance(self0, *intersection_out) + manhattan_distance(other0, *intersection_out);
         return true;
     }
     return false;
@@ -55,6 +61,7 @@ int main(void) {
 
     int x = 0;
     int y = 0;
+    int steps_taken = 0;
 
     char *inst_str;
     char *strtok_cursor = line;
@@ -76,7 +83,8 @@ int main(void) {
                 y -= num_steps;
                 break;
         }
-        Point p = {.x = x, .y = y};
+        steps_taken += num_steps;
+        Point p = {.x = x, .y = y, .steps_taken = steps_taken};
         points_visited_line_1[num_points_line_1++] = p;
 
         strtok_cursor = NULL;
@@ -88,7 +96,7 @@ int main(void) {
     /////////////////////////
     getline(&line, &line_size, file);
     strtok_cursor = line;
-    x = y = 0;
+    x = y = steps_taken = 0;
 
     Point points_visited_line_2[10000];
     size_t num_points_line_2 = 0;
@@ -110,14 +118,16 @@ int main(void) {
                 y -= num_steps;
                 break;
         }
-        Point p = {x = x, y = y};
+        steps_taken += num_steps;
+        Point p = {x = x, y = y, .steps_taken = steps_taken};
         points_visited_line_2[num_points_line_2++] = p;
 
         strtok_cursor = NULL;
     }
 
     Point prev_point_wire_1 = { .x = 0, .y = 0 };
-    int min_distance = INT_MAX;
+    int part1 = INT_MAX;
+    int part2 = INT_MAX;
     for (int i = 0; i < num_points_line_1; i++) {
         Point next_point_wire_1 = points_visited_line_1[i];
 
@@ -131,15 +141,10 @@ int main(void) {
                           prev_point_wire_2, next_point_wire_2, &intersection)) {
                 int this_distance = abs(intersection.x) + abs(intersection.y);
                 if (this_distance > 0) {
-                    printf("intersect distance: %d\n", this_distance);
-                    min_distance = MIN(min_distance, this_distance);
+                    part1 = MIN(part1, this_distance);
+                    part2 = MIN(part2, intersection.steps_taken);
                 }
-                printf("intersection: (%d,%d)\n", intersection.x, intersection.y);
             }
-
-//            printf("wire 1: (%d,%d) -> (%d,%d)\n", prev_point_wire_1.x, prev_point_wire_1.y, next_point_wire_1.x, next_point_wire_1.y);
-//            printf("wire 2: (%d,%d) -> (%d,%d)\n", prev_point_wire_2.x, prev_point_wire_2.y, next_point_wire_2.x, next_point_wire_2.y);
-
 
             prev_point_wire_2 = next_point_wire_2;
         }
@@ -148,7 +153,8 @@ int main(void) {
     }
 
 
-    printf("part 1: %d\n", min_distance);
+    printf("part 1: %d\n", part1);
+    printf("part 2: %d\n", part2);
     free(line);
     fclose(file);
 }
