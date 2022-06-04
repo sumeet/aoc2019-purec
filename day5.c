@@ -38,19 +38,22 @@ int main(void) {
     return 0;
 }
 
-int run_program(Program *program) {
-    int operand1 = program->instructions[program->instructions[program->pc + 1]];
-    int operand2 = program->instructions[program->instructions[program->pc + 2]];
-    int dest = program->instructions[program->pc + 3];
-    int this_op = program->instructions[program->pc];
+int imm_op(Program *program, int offset) {
+    return program->instructions[program->pc + offset];
+}
 
-    switch (this_op) {
+int pos_op(Program *program, int offset) {
+    return program->instructions[program->instructions[program->pc + offset]];
+}
+
+int run_program(Program *program) {
+    switch (imm_op(program, 0)) {
         case 1:
-            program->instructions[dest] = operand1 + operand2;
+            program->instructions[imm_op(program, 3)] = pos_op(program, 1) + pos_op(program, 2);
             program->pc += 4;
             break;
         case 2:
-            program->instructions[dest] = operand1 * operand2;
+            program->instructions[imm_op(program, 3)] = pos_op(program, 1) * pos_op(program, 2);
             program->pc += 4;
             break;
         case 99:
