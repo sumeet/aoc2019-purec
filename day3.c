@@ -10,7 +10,7 @@ typedef struct Point {
     int y;
 } Point;
 
-bool between(int num, int x, int y) {
+bool between(float num, float x, float y) {
     if (x < y) {
         return x <= num && num <= y;
     } else if (x > y) {
@@ -19,33 +19,30 @@ bool between(int num, int x, int y) {
         return x == y == num;
     }
 }
-
-bool intersect(Point self0, Point self1, Point other0, Point other1, Point *intersection_out) {
-    if (!between(self0.x, self0.y, other0.x)) {
-        return false;
+//
+bool intersects(Point self0, Point self1, Point other0, Point other1, Point *intersection_out) {
+    float x0 = (float) self0.x;
+    float y0 = (float) self0.y;
+    float x1 = (float) self1.x;
+    float y1 = (float) self1.y;
+    float x2 = (float) other0.x;
+    float y2 = (float) other0.y;
+    float x3 = (float) other1.x;
+    float y3 = (float) other1.y;
+    float x_cross = ((x0 * y1 - y0 * x1) * (x2 - x3) - (x0 - x1) * (x2 * y3 - y2 * x3)) / ((x0 - x1) * (y2 - y3) - (y0 - y1) * (x2 - x3));
+    float y_cross = ((x0 * y1 - y0 * x1) * (y2 - y3) - (y0 - y1) * (x2 * y3 - y2 * x3)) / ((x0 - x1) * (y2 - y3) - (y0 - y1) * (x2 - x3));
+    if ((between(x_cross, x0, x1) || between(x_cross, x2, x3))
+        &&
+        (between(y_cross, y0, y1) || between(y_cross, y2, y3))) {
+        intersection_out->x = (int) x_cross;
+        intersection_out->y = (int) y_cross;
+        return true;
     }
-
-    int a1 = self1.y - self0.y;
-    int b1 = self0.x - self1.x;
-    int c1 = a1 * self0.x + b1 * self0.y;
-
-    int a2 = other1.y - other0.y;
-    int b2 = other0.x - other1.x;
-    int c2 = a2 * other0.x + b2 * other0.y;
-
-    int delta = a1 * b2 - a2 * b1;
-
-    if (delta == 0) {
-        return false;
-    }
-
-    intersection_out->x = (b2 * c1 - b1 * c2) / delta;
-    intersection_out->y = (a1 * c2 - a2 * c1) / delta;
-    return true;
+    return false;
 }
 
 int main(void) {
-    FILE *file = fopen("./day3.sample", "r");
+    FILE *file = fopen("./day3.input", "r");
     char *line = NULL;
     size_t line_size = 0;
 
@@ -130,7 +127,7 @@ int main(void) {
 
             // check for intersection
             Point intersection;
-            if (intersect(prev_point_wire_1, next_point_wire_1,
+            if (intersects(prev_point_wire_1, next_point_wire_1,
                           prev_point_wire_2, next_point_wire_2, &intersection)) {
                 int this_distance = abs(intersection.x) + abs(intersection.y);
                 if (this_distance > 0) {
