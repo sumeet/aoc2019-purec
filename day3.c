@@ -10,7 +10,21 @@ typedef struct Point {
     int y;
 } Point;
 
+bool between(int num, int x, int y) {
+    if (x < y) {
+        return x <= num && num <= y;
+    } else if (x > y) {
+        return y <= num && num <= x;
+    } else {
+        return x == y == num;
+    }
+}
+
 bool intersect(Point self0, Point self1, Point other0, Point other1, Point *intersection_out) {
+    if (!between(self0.x, self0.y, other0.x)) {
+        return false;
+    }
+
     int a1 = self1.y - self0.y;
     int b1 = self0.x - self1.x;
     int c1 = a1 * self0.x + b1 * self0.y;
