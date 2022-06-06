@@ -20,6 +20,11 @@ int main(void) {
     printf("part1: ");
     run_program(&program, 1);
     printf("\n");
+
+    program = parsed_program;
+    printf("part2: ");
+    run_program(&program, 5);
+    printf("\n");
     return 0;
 }
 
@@ -71,6 +76,31 @@ void run_program(Program *program, int input) {
         case 4: // output
             printf("%d\n", *param_for_mode(program, intcode, 1));
             program->pc += 2;
+            break;
+        case 5: // jump-if-true
+            if (*param_for_mode(program, intcode, 1) != 0) {
+                program->pc = *param_for_mode(program, intcode, 2);
+            } else {
+                program->pc += 3;
+            }
+            break;
+        case 6: // jump-if-false
+            if (*param_for_mode(program, intcode, 1) == 0) {
+                program->pc = *param_for_mode(program, intcode, 2);
+            } else {
+                program->pc += 3;
+            }
+            break;
+        //Opcode 7 is less than: if the first parameter is less than the second parameter, it stores 1 in the position given by the third parameter. Otherwise, it stores 0.
+        case 7: // less-than
+            bool is_less = *param_for_mode(program, intcode, 1) < *param_for_mode(program, intcode, 2);
+            *param_for_mode(program, intcode, 3) = is_less ? 1 : 0;
+            program->pc += 4;
+            break;
+        case 8: // equals
+            bool is_equal = *param_for_mode(program, intcode, 1) == *param_for_mode(program, intcode, 2);
+            *param_for_mode(program, intcode, 3) = is_equal ? 1 : 0;
+            program->pc += 4;
             break;
         case 99:
             return;
