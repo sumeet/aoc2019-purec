@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define MAX_PROGRAM_SIZE 80000
 
@@ -9,17 +10,16 @@ typedef struct Program {
     int pc;
 } Program;
 
-int run_program(Program *program);
+void run_program(Program *program, int input);
 Program parse_input(char *filename);
 
 int main(void) {
-    Program parsed_program = parse_input("./day2.input");
+    Program parsed_program = parse_input("./day5.input");
     Program program = {0};
     program = parsed_program;
-    program.instructions[1] = 12;
-    program.instructions[2] = 2;
-    printf("part1: %d\n", run_program(&program));
-
+    printf("part1: ");
+    run_program(&program, 1);
+    printf("\n");
     return 0;
 }
 
@@ -53,26 +53,33 @@ int *param_for_mode(Program *program, int intcode, int offset) {
     }
 }
 
-int run_program(Program *program) {
-    int intcode;
-    switch (intcode = program->instructions[program->pc]) {
-        case 1:
+void run_program(Program *program, int input) {
+    int intcode = program->instructions[program->pc];
+    switch (parse_opcode(intcode)) {
+        case 1: // add
             *param_for_mode(program, intcode, 3) = *param_for_mode(program, intcode, 1) + *param_for_mode(program, intcode, 2);
             program->pc += 4;
             break;
-        case 2:
+        case 2: // multiply
             *param_for_mode(program, intcode, 3) = *param_for_mode(program, intcode, 1) * *param_for_mode(program, intcode, 2);
             program->pc += 4;
             break;
+        case 3: // input
+            *param_for_mode(program, intcode, 1) = input;
+            program->pc += 2;
+            break;
+        case 4: // output
+            printf("%d\n", *param_for_mode(program, intcode, 1));
+            program->pc += 2;
+            break;
         case 99:
-            program->pc = 0;
-            return program->instructions[0];
+            return;
         default:
             printf("invalid opcode %d at PC %d\n", program->instructions[program->pc], program->pc);
             exit(1);
     }
 
-    return run_program(program);
+    return run_program(program, input);
 }
 
 Program parse_input(char *filename) {
@@ -80,14 +87,19 @@ Program parse_input(char *filename) {
     int this_intcode = 0;
     Program program = {0};
     int i = 0;
+    int is_negative = false;
     for (char c = fgetc(file); c != EOF; c = fgetc(file)) {
         // there's a newline at the end of the file
         if (c == ',' || c == '\n') {
-            program.instructions[i++] = this_intcode;
+            program.instructions[i++] = is_negative ? this_intcode * -1 : this_intcode;
             this_intcode = 0;
+            is_negative = false;
+        } else if (c == '-') {
+            is_negative = true;
         } else {
             this_intcode = (this_intcode * 10) + c - '0';
         }
+
     }
     return program;
 }
