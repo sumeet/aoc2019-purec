@@ -16,24 +16,9 @@ int main(void) {
     Program parsed_program = parse_input("./day2.input");
     Program program = {0};
     program = parsed_program;
-    //memcpy(program, parsed_program, sizeof(parsed_program));
-    // part 1
     program.instructions[1] = 12;
     program.instructions[2] = 2;
     printf("part1: %d\n", run_program(&program));
-
-    // part 2
-    for (int i = 0; i < 100; i++) {
-        for (int j = 0; j < 100; j++) {
-//            memcpy(program, parsed_program, sizeof(parsed_program));
-            program = parsed_program;
-            program.instructions[1] = i;
-            program.instructions[2] = j;
-            if (run_program(&program) == 19690720) {
-                printf("part2: %d\n", 100 * i + j);
-            }
-        }
-    }
 
     return 0;
 }
