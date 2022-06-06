@@ -23,22 +23,45 @@ int main(void) {
     return 0;
 }
 
-int imm_op(Program *program, int offset) {
-    return program->instructions[program->pc + offset];
+int parse_opcode(int intcode) {
+   // for intcode = 1002, this returns just 2 (the last 2 digits)
+   return intcode % 100;
 }
 
-int pos_op(Program *program, int offset) {
-    return program->instructions[program->instructions[program->pc + offset]];
+typedef enum ParamMode {
+    PARAM_MODE_POSITION = 0,
+    PARAM_MODE_IMMEDIATE = 1,
+} ParamMode;
+
+// for intcode = 1002, 1 => 0 ; 2 => 1 ; 3 => 0
+ParamMode get_param_mode(int intcode, int param_offset) {
+    intcode /= 100;
+    int param_mode = 0;
+    for (int i = 0; i < param_offset; i++) {
+        param_mode = intcode % 10;
+        intcode /= 10;
+    }
+    return param_mode;
+}
+
+int *param_for_mode(Program *program, int intcode, int offset) {
+    switch (get_param_mode(intcode, offset)) {
+        case PARAM_MODE_POSITION:
+            return &program->instructions[program->instructions[program->pc + offset]];
+        case PARAM_MODE_IMMEDIATE:
+            return &program->instructions[program->pc + offset];
+    }
 }
 
 int run_program(Program *program) {
-    switch (imm_op(program, 0)) {
+    int intcode;
+    switch (intcode = program->instructions[program->pc]) {
         case 1:
-            program->instructions[imm_op(program, 3)] = pos_op(program, 1) + pos_op(program, 2);
+            *param_for_mode(program, intcode, 3) = *param_for_mode(program, intcode, 1) + *param_for_mode(program, intcode, 2);
             program->pc += 4;
             break;
         case 2:
-            program->instructions[imm_op(program, 3)] = pos_op(program, 1) * pos_op(program, 2);
+            *param_for_mode(program, intcode, 3) = *param_for_mode(program, intcode, 1) * *param_for_mode(program, intcode, 2);
             program->pc += 4;
             break;
         case 99:
